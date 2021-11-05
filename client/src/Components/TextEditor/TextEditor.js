@@ -29,6 +29,38 @@ const TextEditor = () => {
             s.disconnect()
         }
     }, [])
+
+    useEffect(() => {
+        if(socket == null || quill == null) return
+
+        const header = (delta) => {
+            quill.updateContents(delta)
+        }
+
+        socket.on('receive-changes', header )
+
+        return () => {
+            socket.off('receive-changes', header )
+        }
+    }, [socket, quill])
+
+
+    useEffect(() => {
+        if(socket == null || quill == null) return
+
+        const header = (delta, oldDelta, source) => {
+            if(source !== "user") return
+            socket.emit("send-change", delta)
+        }
+
+        quill.on('text-change', header )
+
+        return () => {
+            quill.off('text-change', header )
+        }
+    }, [socket, quill])
+
+
     const wrapperRef =  useCallback((wrapper) => {
         if(wrapper == null) return
         wrapper.innerHTML = ''
